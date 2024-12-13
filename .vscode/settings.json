@@ -1,6 +1,14 @@
 {
+    "editor.rulers": [100, 120],
+
     "[rust]": {
         "editor.formatOnSave": true,
+        "editor.formatOnSaveMode": "file",
         "editor.defaultFormatter": "rust-lang.rust-analyzer"
+    },
+    "[toml]": {
+        "editor.formatOnSave": true,
+        "editor.formatOnSaveMode": "file",
+        "editor.defaultFormatter": "tamasfe.even-better-toml"
     }
 }
