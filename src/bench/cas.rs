@@ -1,8 +1,8 @@
-use core_affinity::CoreId;
-use std::sync::Barrier;
-use std::sync::atomic::{AtomicBool, Ordering};
-use quanta::Clock;
 use super::Count;
+use core_affinity::CoreId;
+use quanta::Clock;
+use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::Barrier;
 
 const PING: bool = false;
 const PONG: bool = true;
@@ -38,8 +38,12 @@ impl super::Bench for Bench {
                 core_affinity::set_for_current(pong_core);
 
                 state.barrier.wait();
-                for _ in 0..(num_round_trips*num_samples) {
-                    while state.flag.compare_exchange(PING, PONG, Ordering::Relaxed, Ordering::Relaxed).is_err() {}
+                for _ in 0..(num_round_trips * num_samples) {
+                    while state
+                        .flag
+                        .compare_exchange(PING, PONG, Ordering::Relaxed, Ordering::Relaxed)
+                        .is_err()
+                    {}
                 }
             });
 
@@ -53,7 +57,11 @@ impl super::Bench for Bench {
                 for _ in 0..num_samples {
                     let start = clock.raw();
                     for _ in 0..num_round_trips {
-                        while state.flag.compare_exchange(PONG, PING, Ordering::Relaxed, Ordering::Relaxed).is_err() {}
+                        while state
+                            .flag
+                            .compare_exchange(PONG, PING, Ordering::Relaxed, Ordering::Relaxed)
+                            .is_err()
+                        {}
                     }
                     let end = clock.raw();
                     let duration = clock.delta(start, end).as_nanos();
@@ -65,6 +73,7 @@ impl super::Bench for Bench {
 
             pong.join().unwrap();
             ping.join().unwrap()
-        }).unwrap()
+        })
+        .unwrap()
     }
 }

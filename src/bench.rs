@@ -1,21 +1,23 @@
 pub mod cas;
-pub mod read_write;
 pub mod msg_passing;
+pub mod read_write;
 
+use crate::CliArgs;
 use ansi_term::Color;
 use core_affinity::CoreId;
-use quanta::Clock;
-use std::io::Write;
 use ndarray::{s, Axis};
 use ordered_float::NotNan;
-use crate::CliArgs;
+use quanta::Clock;
+use std::io::Write;
 
 pub type Count = u32;
 
 pub trait Bench {
     fn run(&self, cores: (CoreId, CoreId), clock: &Clock, num_iterations: Count, num_samples: Count) -> Vec<f64>;
     /// Whether the bench on (i,j) is the same as the bench on (j,i)
-    fn is_symmetric(&self) -> bool { true }
+    fn is_symmetric(&self) -> bool {
+        true
+    }
 }
 
 pub fn run_bench(cores: &[CoreId], clock: &Clock, args: &CliArgs, bench: impl Bench) {
@@ -48,7 +50,7 @@ pub fn run_bench(cores: &[CoreId], clock: &Clock, args: &CliArgs, bench: impl Be
         for j in 0..n_cores {
             if bench.is_symmetric() {
                 if i <= j {
-                   continue;
+                    continue;
                 }
             } else if i == j {
                 eprint!("{: >8}", "");
@@ -57,9 +59,9 @@ pub fn run_bench(cores: &[CoreId], clock: &Clock, args: &CliArgs, bench: impl Be
 
             let core_j = cores[j];
             // We add 1 warmup cycle first
-            let durations = bench.run((core_i, core_j), clock, num_iterations, 1+num_samples);
+            let durations = bench.run((core_i, core_j), clock, num_iterations, 1 + num_samples);
             let durations = &durations[1..];
-            let mut values = results.slice_mut(s![i,j,..]);
+            let mut values = results.slice_mut(s![i, j, ..]);
             for s in 0..num_samples as usize {
                 values[s] = durations[s]
             }
@@ -80,7 +82,8 @@ pub fn run_bench(cores: &[CoreId], clock: &Clock, args: &CliArgs, bench: impl Be
         let mean = results.mean_axis(Axis(2)).unwrap();
         let stddev = results.std_axis(Axis(2), 1.0) / (num_samples as f64).sqrt();
 
-        let ((min_i, min_j), _) = mean.indexed_iter()
+        let ((min_i, min_j), _) = mean
+            .indexed_iter()
             .filter_map(|(i, v)| NotNan::new(*v).ok().map(|v| (i, v)))
             .min_by_key(|(_, v)| *v)
             .unwrap();
@@ -88,7 +91,8 @@ pub fn run_bench(cores: &[CoreId], clock: &Clock, args: &CliArgs, bench: impl Be
         let min_stddev = format!("±{:.1}", stddev[(min_i, min_j)]);
         let (min_core_id_i, min_core_id_j) = (cores[min_i].id, cores[min_j].id);
 
-        let ((max_i, max_j), _) = mean.indexed_iter()
+        let ((max_i, max_j), _) = mean
+            .indexed_iter()
             .filter_map(|(i, v)| NotNan::new(*v).ok().map(|v| (i, v)))
             .max_by_key(|(_, v)| *v)
             .unwrap();
@@ -96,8 +100,20 @@ pub fn run_bench(cores: &[CoreId], clock: &Clock, args: &CliArgs, bench: impl Be
         let max_stddev = format!("±{:.1}", stddev[(max_i, max_j)]);
         let (max_core_id_i, max_core_id_j) = (cores[max_i].id, cores[max_j].id);
 
-        eprintln!("    Min  latency: {}ns {} cores: ({},{})", mcolor.paint(min_mean), scolor.paint(min_stddev), min_core_id_i, min_core_id_j);
-        eprintln!("    Max  latency: {}ns {} cores: ({},{})", mcolor.paint(max_mean), scolor.paint(max_stddev), max_core_id_i, max_core_id_j);
+        eprintln!(
+            "    Min  latency: {}ns {} cores: ({},{})",
+            mcolor.paint(min_mean),
+            scolor.paint(min_stddev),
+            min_core_id_i,
+            min_core_id_j
+        );
+        eprintln!(
+            "    Max  latency: {}ns {} cores: ({},{})",
+            mcolor.paint(max_mean),
+            scolor.paint(max_stddev),
+            max_core_id_i,
+            max_core_id_j
+        );
     }
 
     // Print mean latency
@@ -112,9 +128,11 @@ pub fn run_bench(cores: &[CoreId], clock: &Clock, args: &CliArgs, bench: impl Be
     if args.csv {
         let results = results.mean_axis(Axis(2)).unwrap();
         for row in results.rows() {
-            let row = row.iter()
+            let row = row
+                .iter()
                 .map(|v| if v.is_nan() { "".to_string() } else { v.to_string() })
-                .collect::<Vec<_>>().join(",");
+                .collect::<Vec<_>>()
+                .join(",");
             println!("{}", row);
         }
     }

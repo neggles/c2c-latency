@@ -1,15 +1,15 @@
 use cache_padded::CachePadded;
 use core_affinity::CoreId;
-use std::sync::Barrier;
-use std::sync::atomic::{Ordering, AtomicBool};
 use quanta::Clock;
+use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::Barrier;
 
 use super::Count;
 
 pub struct Bench {
     barrier: CachePadded<Barrier>,
     owned_by_ping: CachePadded<AtomicBool>,
-    owned_by_pong: CachePadded<AtomicBool>
+    owned_by_pong: CachePadded<AtomicBool>,
 }
 
 impl Bench {
@@ -39,7 +39,7 @@ impl super::Bench for Bench {
                 core_affinity::set_for_current(pong_core);
                 state.barrier.wait();
                 let mut v = false;
-                for _ in 0..(num_round_trips*num_samples) {
+                for _ in 0..(num_round_trips * num_samples) {
                     // Acquire -> Release is important to enforce a causal dependency
                     // This has no effect on x86
                     while state.owned_by_ping.load(Ordering::Acquire) != v {}
@@ -72,6 +72,7 @@ impl super::Bench for Bench {
 
             pong.join().unwrap();
             ping.join().unwrap()
-        }).unwrap()
+        })
+        .unwrap()
     }
 }

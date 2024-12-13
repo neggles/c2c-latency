@@ -1,6 +1,6 @@
-use std::time::Duration;
-use quanta::Clock;
 use crate::bench::Count;
+use quanta::Clock;
+use std::time::Duration;
 
 pub fn black_box<T>(dummy: T) -> T {
     unsafe { std::ptr::read_volatile(&dummy) }
@@ -17,7 +17,7 @@ pub fn delay_cycles(num_iterations: usize) {
 // Returns the duration of doing `num_iterations` of clock.raw()
 pub fn clock_read_overhead_sum(clock: &Clock, num_iterations: Count) -> Duration {
     let start = clock.raw();
-    for _ in 0..(num_iterations-1) {
+    for _ in 0..(num_iterations - 1) {
         black_box(clock.raw());
     }
     let end = clock.raw();
@@ -44,13 +44,21 @@ pub fn get_cpuid() -> Option<raw_cpuid::CpuId> {
 pub fn assert_rdtsc_usable(clock: &quanta::Clock) {
     let cpuid = get_cpuid().expect("This benchmark is only compatible with x86");
 
-    assert!(cpuid.get_advanced_power_mgmt_info().expect("CPUID failed").has_invariant_tsc(),
-        "This benchmark only runs with a TscInvariant=true");
+    assert!(
+        cpuid
+            .get_advanced_power_mgmt_info()
+            .expect("CPUID failed")
+            .has_invariant_tsc(),
+        "This benchmark only runs with a TscInvariant=true"
+    );
 
     const NUM_ITERS: Count = 10_000;
     let clock_read_overhead = clock_read_overhead_sum(&clock, NUM_ITERS).as_nanos() as f64 / NUM_ITERS as f64;
     eprintln!("Reading the clock via RDTSC takes {:.2}ns", clock_read_overhead);
-    assert!((0.1..1000.0).contains(&clock_read_overhead), "The timing to read the clock is either not-consistant or too slow");
+    assert!(
+        (0.1..1000.0).contains(&clock_read_overhead),
+        "The timing to read the clock is either not-consistant or too slow"
+    );
 }
 
 pub fn get_cpu_brand() -> Option<String> {
