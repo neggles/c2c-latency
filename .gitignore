@@ -309,3 +309,7 @@ poetry.toml
 pyrightconfig.json
 
 # End of https://www.toptal.com/developers/gitignore/api/python
+
+# local misc and temp dirs
+/misc/
+/temp/
