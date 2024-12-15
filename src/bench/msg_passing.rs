@@ -1,5 +1,5 @@
-use cache_padded::CachePadded;
 use core_affinity::CoreId;
+use crossbeam_utils::CachePadded;
 use quanta::Clock;
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::Barrier;

@@ -49,7 +49,6 @@ impl super::Bench for Bench {
 
             let ping = s.spawn(move |_| {
                 core_affinity::set_for_current(ping_core);
-
                 let mut results = Vec::with_capacity(num_samples as usize);
 
                 state.barrier.wait();

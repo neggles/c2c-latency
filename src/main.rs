@@ -4,6 +4,7 @@ mod utils;
 use crate::bench::run_bench;
 use bench::Count;
 use clap::Parser;
+use hwlocality::Topology;
 use quanta::Clock;
 use std::sync::Arc;
 
@@ -46,6 +47,7 @@ pub struct CliArgs {
 fn main() {
     let args = CliArgs::parse();
 
+    let topology: Topology = Topology::new().expect("Topology::new() failed");
     let cores = core_affinity::get_core_ids().expect("get_core_ids() failed");
 
     let cores = if !args.cores.is_empty() {
@@ -83,13 +85,13 @@ fn main() {
                 eprintln!();
                 eprintln!("1) CAS latency on a single shared cache line");
                 eprintln!();
-                run_bench(&cores, &clock, &args, bench::cas::Bench::new());
+                run_bench(&topology, &cores, &clock, &args, bench::cas::Bench::new());
             }
             2 => {
                 eprintln!();
                 eprintln!("2) Single-writer single-reader latency on two shared cache lines");
                 eprintln!();
-                run_bench(&cores, &clock, &args, bench::read_write::Bench::new());
+                run_bench(&topology, &cores, &clock, &args, bench::read_write::Bench::new());
             }
             3 => {
                 utils::assert_rdtsc_usable(&clock);
@@ -97,6 +99,7 @@ fn main() {
                 eprintln!("3) Message passing. One writer and one reader on many cache line");
                 eprintln!();
                 run_bench(
+                    &topology,
                     &cores,
                     &clock,
                     &args,
